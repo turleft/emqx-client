@@ -34,21 +34,23 @@ type Body struct {
 	Token string `json:"token"`
 }
 
+var addr = "unizero.top"
+
 func main() {
-	host := flag.String("host", "127.0.0.1", "server hostname or IP")
+	host := flag.String("host", addr, "server hostname or IP")
 	port := flag.Int("port", 8883, "server port")
 	topic := flag.String("topic", "test/abc", "publish/subscribe topic")
 	username := flag.String("username", "test", "username")
 	password := flag.String("password", "test", "password")
-	cafile := flag.String("cafile", "/home/turleft/go/src/emqx-client/ca/ca.pem",
+	cafile := flag.String("cafile", "/home/turleft/go/src/emqx-client/unizero.top_bundle.crt",
 		"path to a file containing trusted CA certificates to enable encryptedommunication.")
-	cert := flag.String("cert", "/home/turleft/go/src/emqx-client/ca/client.pem",
+	cert := flag.String("cert", "/home/turleft/go/src/emqx-client/device.crt",
 		"client certificate for authentication, if required by server.")
-	key := flag.String("key", "/home/turleft/go/src/emqx-client/ca/client.key",
+	key := flag.String("key", "/home/turleft/go/src/emqx-client/device.key",
 		"client certificate for authentication, if required by server.")
 	flag.Parse()
 
-	get, err := http.Get("http://localhost:8081/token")
+	get, err := http.Get(fmt.Sprintf("http://%s:8081/token", addr))
 	if err != nil {
 		log.Printf("error [%s]\n", err.Error())
 	}
