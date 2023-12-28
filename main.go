@@ -19,6 +19,7 @@ import (
 )
 
 type ConConfig struct {
+	ClientId string
 	Broker   string
 	Topic    string
 	Username string
@@ -75,6 +76,7 @@ func main() {
 	password = &data.Token
 
 	config := ConConfig{
+		ClientId: "123",
 		Broker:   fmt.Sprintf("tls://%s:%d", *host, *port),
 		Topic:    *topic,
 		Username: *username,
@@ -170,6 +172,7 @@ func SetAutoReconnect(config *ConConfig, opts *mqtt.ClientOptions) {
 
 func mqttConnect(config *ConConfig) mqtt.Client {
 	opts := mqtt.NewClientOptions()
+	opts.SetClientID(config.ClientId)
 	opts.AddBroker(config.Broker)
 	opts.SetUsername(config.Username)
 	opts.SetPassword(config.Password)
