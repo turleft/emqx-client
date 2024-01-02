@@ -38,19 +38,21 @@ type Body struct {
 var addr = "unizero.top"
 
 func main() {
+	//配置
 	host := flag.String("host", addr, "server hostname or IP")
 	port := flag.Int("port", 8883, "server port")
 	topic := flag.String("topic", "test/abc", "publish/subscribe topic")
 	username := flag.String("username", "test", "username")
 	password := flag.String("password", "test", "password")
-	cafile := flag.String("cafile", "/home/turleft/go/src/emqx-client/unizero.top_bundle.crt",
+	cafile := flag.String("cafile", "unizero.top_bundle.crt",
 		"path to a file containing trusted CA certificates to enable encryptedommunication.")
-	cert := flag.String("cert", "/home/turleft/go/src/emqx-client/device.crt",
+	cert := flag.String("cert", "device.crt",
 		"client certificate for authentication, if required by server.")
-	key := flag.String("key", "/home/turleft/go/src/emqx-client/device.key",
+	key := flag.String("key", "device.key",
 		"client certificate for authentication, if required by server.")
 	flag.Parse()
 
+	//申请token
 	get, err := http.Get(fmt.Sprintf("http://%s:8081/token", addr))
 	if err != nil {
 		log.Printf("error [%s]\n", err.Error())
@@ -75,6 +77,7 @@ func main() {
 	}
 	password = &data.Token
 
+	//连接配置
 	config := ConConfig{
 		ClientId: "123",
 		Broker:   fmt.Sprintf("tls://%s:%d", *host, *port),
@@ -85,7 +88,10 @@ func main() {
 		Cert:     *cert,
 		Key:      *key,
 	}
+	//连接emqx
 	client := mqttConnect(&config)
+
+	//订阅
 	go sub(client, &config)
 	//publish(client, &config)
 
@@ -94,19 +100,13 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 
 	// 启动 MQTT 订阅
-	go func() {
-		for {
-			select {
-			case sig := <-c:
-				fmt.Printf("Received signal: %v\n", sig)
-				fmt.Println("Disconnecting from MQTT broker...")
-				client.Disconnect(250)
-				os.Exit(0)
-			}
-		}
-	}()
-	// 阻塞主 goroutine
-	select {}
+	select {
+	case sig := <-c:
+		fmt.Printf("Received signal: %v\n", sig)
+		fmt.Println("Disconnecting from MQTT broker...")
+		client.Disconnect(250)
+		os.Exit(0)
+	}
 }
 
 func publish(client mqtt.Client, config *ConConfig) {
@@ -135,6 +135,7 @@ func sub(client mqtt.Client, config *ConConfig) {
 	if !ack {
 		log.Printf("sub to topic timeout: %s \n", config.Topic)
 	}
+	token.Wait()
 }
 
 func SetAutoReconnect(config *ConConfig, opts *mqtt.ClientOptions) {
